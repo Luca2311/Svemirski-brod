@@ -1,73 +1,59 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class NeprijateljSpawner : MonoBehaviour
+public class PonasanjeNeprijatelja : MonoBehaviour
 {
-    public GameObject neprijateljPrefab;
-    public float sirina = 10f;
-    public float visina = 5f;
-    private bool movingDesno = true;
-    public float brzina = 5f;
-    private float xmax;
-    private float xmin;
 
-    //Use this for initialization
+    public float snaga = 150;
+    public GameObject projektil;
+    public float PucanjUSekundi = 4f;
+    public float brzinaProjektila = 10;
+    public int rezultatValue = 150;
+    private prikazRezultata prikazrezultata;
+
     void Start()
     {
-        float distanceToCamera = transform.position.z - Camera.main.transform.position.z;
-        Vector3 lijevaGranica = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, distanceToCamera));
-        Vector3 desnaGranica = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, distanceToCamera));
-        xmax = desnaGranica.x;
-        xmin = lijevaGranica.x;
-        foreach (Transform child in transform)
-        {
-            GameObject neprijatelj = Instantiate(neprijateljPrefab, new Vector3(0, 0, 0), Quaternion.identity) as GameObject;
-            neprijatelj.transform.parent = child;
-        }
-    }
-    //Update is called once per frame
-    public void OnDrawGizmos()
-    {
-        Gizmos.DrawWireCube(transform.position, new Vector3(sirina, visina));
-    }
-    //Update is called once per frame
-    private void Update()
-    {
-        if (movingDesno)
-        {
-            transform.position += Vector3.right * brzina * Time.deltaTime;
-        }
-        else
-        {
-            transform.position += Vector3.left * brzina * Time.deltaTime;
-        }
-        float desnaGranicaFormacije = transform.position.x + (0.5f * sirina);
-        float lijevaGranicaFormacije = transform.position.x - (0.5f * sirina);
-        if (lijevaGranicaFormacije < xmin)
-        {
-            movingDesno = true;
-        }
-        else if (desnaGranicaFormacije > xmax)
-        {
-            movingDesno = false;
-        }
-        if (AllMembersDead())
-        {
-            Debug.Log("praznaformacija");
-        }
-    }
-    //provejeravamo da li su protivnici unisteni
-    bool AllMembersDead()
-    {
-        foreach(Transform childPositionGameObject in transform)
-        {
-            if (childPositionGameObject.childCount > 0)
-            {
-                return false;
-            }
-        }
-        return true;
+        prikazrezultata = GameObject.Find("Rezultat").GetComponent<prikazRezultata>();
     }
 
+    void Die()
+    {
+        prikazrezultata.Rezultat(rezultatValue);
+        Destroy(gameObject);
+    }
+
+
+    // Use this for initialization
+    void OnTriggerEnter2D(Collider2D collider)
+    {
+        projektil missile = collider.gameObject.GetComponent<projektil>();
+        if (missile)
+        {
+            missile.Hit();
+            snaga -= missile.GetDamage();
+            if (snaga <= 0)
+
+                Die();
+
+        }
+
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        float vjerojatnost = PucanjUSekundi * Time.deltaTime;
+        if (Random.value < vjerojatnost)
+        {
+            Fire();
+        }
+
+    }
+    void Fire()
+    {
+        Vector3 offset = new Vector3(0, -1.0f, 0);
+        Vector3 polozajpucnja = transform.position + offset;
+        GameObject missile = Instantiate(projektil, polozajpucnja, Quaternion.identity) as GameObject;
+        missile.GetComponent<Rigidbody2D>().velocity = new Vector2(0, -brzinaProjektila);
+    }
 }
