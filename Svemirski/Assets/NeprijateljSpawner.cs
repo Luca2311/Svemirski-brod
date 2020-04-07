@@ -52,6 +52,22 @@ public class NeprijateljSpawner : MonoBehaviour
         {
             movingDesno = false;
         }
+        if (AllMembersDead())
+        {
+            Debug.Log("praznaformacija");
+        }
+    }
+    //provejeravamo da li su protivnici unisteni
+    bool AllMembersDead()
+    {
+        foreach(Transform childPositionGameObject in transform)
+        {
+            if (childPositionGameObject.childCount > 0)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
